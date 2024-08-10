@@ -3,6 +3,7 @@
 Allows you to play endlessly, or at least until you fail.
 
 Use `qpm s build` to build
+
 Same goes for `qpm s copy` and `qpm s qmod`
 
 ## Credits
