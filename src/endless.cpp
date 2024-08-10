@@ -83,9 +83,10 @@ MAKE_HOOK_MATCH(ScoreUIController_Start, &GlobalNamespace::ScoreUIController::St
 		endless::state.time_text.emplace(BSML::Lite::CreateText(canvas->transform, "", TMPro::FontStyles::Normal, 14.f, {-50, 208}, {100, 5}));
 		endless::state.score_text.emplace(BSML::Lite::CreateText(canvas->transform, "", TMPro::FontStyles::Normal, 14.f, {70, 208}, {100, 5}));
 	}
-	endless::state.time_text->gameObject->SetActive(endless::state.activated);
-	endless::state.score_text->gameObject->SetActive(endless::state.activated);
-	if(endless::state.activated)
+	bool hud_enabled = endless::state.activated && getModConfig().hud_enabled.GetValue();
+	endless::state.time_text->gameObject->SetActive(hud_enabled);
+	endless::state.score_text->gameObject->SetActive(hud_enabled);
+	if(hud_enabled)
 		endless::set_score_text(0);
 }
 

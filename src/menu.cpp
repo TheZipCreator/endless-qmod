@@ -36,6 +36,9 @@ namespace endless {
 		BSML::Lite::CreateToggle(container->transform, "Continue on Fail", getModConfig().continue_on_fail.GetValue(), [](bool value) {
 			getModConfig().continue_on_fail.SetValue(value);
 		});
+		BSML::Lite::CreateToggle(container->transform, "Endless HUD Enabled", getModConfig().hud_enabled.GetValue(), [](bool value) {
+			getModConfig().hud_enabled.SetValue(value);
+		});
 
 		// difficulty
 		// I don't know if this is what you're supposed to do but it compiles

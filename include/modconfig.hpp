@@ -10,4 +10,5 @@ DECLARE_CONFIG(ModConfig,
 	CONFIG_VALUE(noodle_extensions, std::string, "noodle_extensions", "Allowed");
 	CONFIG_VALUE(chroma, std::string, "chroma", "Allowed");
 	CONFIG_VALUE(continue_on_fail, bool, "continue_on_fail", false);
+	CONFIG_VALUE(hud_enabled, bool, "hud_enabled", true);
 );
