@@ -87,7 +87,6 @@ namespace endless {
 			>(
 				std::function([splsfc](UnityW<GlobalNamespace::StandardLevelScenesTransitionSetupDataSO> slstss, GlobalNamespace::LevelCompletionResults *lcr) -> void {
 					splsfc->HandleStandardLevelDidFinish(slstss, lcr);
-					// on_level_end(lcr);
 				})
 			),
 			nullptr,

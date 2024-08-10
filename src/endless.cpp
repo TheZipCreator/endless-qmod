@@ -45,9 +45,9 @@ MAKE_HOOK_MATCH(pause_start_hook, &GlobalNamespace::PauseMenuManager::Start, voi
 	static SafePtrUnity<UnityEngine::UI::Button> button = SafePtrUnity<UnityEngine::UI::Button>();
 	if(!button) {
 		// create skip button
-		auto canvas = self->_levelBar->get_transform()->get_parent()->get_parent()->GetComponent<UnityEngine::Canvas *>();
+		auto canvas = self->_levelBar->transform->parent->parent->GetComponent<UnityEngine::Canvas *>();
 		RETURN_IF_NULL(canvas,);
-		button.emplace(BSML::Lite::CreateUIButton(canvas->get_transform(), "Skip", {86, -55}, [self]() {
+		button.emplace(BSML::Lite::CreateUIButton(canvas->transform, "Skip", {86, -55}, [self]() {
 			auto mth = UnityEngine::Object::FindObjectOfType<GlobalNamespace::MenuTransitionsHelper *>();
 			RETURN_IF_NULL(mth,);
 			self->enabled = false;
@@ -56,7 +56,7 @@ MAKE_HOOK_MATCH(pause_start_hook, &GlobalNamespace::PauseMenuManager::Start, voi
 			})));
 		}));
 	}
-	button.ptr()->get_gameObject()->SetActive(endless::state.activated);
+	button->gameObject->SetActive(endless::state.activated);
 }
 
 MAKE_HOOK_MATCH(game_finish_hook, &GlobalNamespace::MenuTransitionsHelper::HandleMainGameSceneDidFinish, void, 
