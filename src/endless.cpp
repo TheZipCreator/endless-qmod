@@ -32,6 +32,7 @@
 #include "main.hpp"
 #include "modconfig.hpp"
 
+
 // whether endless mode should be continued
 static bool endless_should_continue(GlobalNamespace::LevelCompletionResults *lcr) {
 	return 
@@ -58,19 +59,6 @@ MAKE_HOOK_MATCH(pause_start_hook, &GlobalNamespace::PauseMenuManager::Start, voi
 	button.ptr()->get_gameObject()->SetActive(endless::state.activated);
 }
 
-// MAKE_HOOK_MATCH(pause_restart_hook, &GlobalNamespace::PauseMenuManager::RestartButtonPressed, void, GlobalNamespace::PauseMenuManager *self) {
-// 	if(!endless::state.activated) {
-// 		pause_restart_hook(self);
-// 		return;
-// 	}
-// 	auto mth = UnityEngine::Object::FindObjectOfType<GlobalNamespace::MenuTransitionsHelper *>();
-// 	RETURN_IF_NULL(mth, false);
-// 	self->enabled = false;
-// 	mth->_gameScenesManager->PopScenes(0.f, nullptr, custom_types::MakeDelegate<System::Action_1<Zenject::DiContainer*>*>(std::function([self](Zenject::DiContainer *unused) {
-// 		endless::next_level();
-// 	})));
-// }
-
 MAKE_HOOK_MATCH(game_finish_hook, &GlobalNamespace::MenuTransitionsHelper::HandleMainGameSceneDidFinish, void, 
 	GlobalNamespace::MenuTransitionsHelper *self,
 	GlobalNamespace::StandardLevelScenesTransitionSetupDataSO *slstsdSO,
@@ -89,6 +77,8 @@ MAKE_HOOK_MATCH(game_finish_hook, &GlobalNamespace::MenuTransitionsHelper::Handl
 }
 
 namespace endless {
+	State state;
+	
 	bool next_level(void) {
 		auto levelParams = get_next_level();
 		if(levelParams == std::nullopt) {
@@ -162,7 +152,6 @@ namespace endless {
 	}
 	void register_hooks() {
 		INSTALL_HOOK(PaperLogger, pause_start_hook);
-		// INSTALL_HOOK(PaperLogger, pause_restart_hook);
 		INSTALL_HOOK(PaperLogger, game_finish_hook);
 	}
 }

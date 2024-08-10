@@ -10,10 +10,11 @@
 
 namespace endless {
 	// state
-	struct {
+	struct State {
 		// whether endless mode is currently activated
 		bool activated = false;
-	} state;
+	};
+	extern State state;
 	// starts endless mode
 	void start_endless(void);
 	// starts the next level in endless mode. Returns whether it actually started

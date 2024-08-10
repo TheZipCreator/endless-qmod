@@ -67,3 +67,6 @@ extern.cmake
 
 # QMOD Schema
 mod.json.schema
+
+# others
+log

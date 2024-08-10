@@ -35,4 +35,6 @@ MOD_EXTERN_FUNC void late_load() noexcept {
   PaperLogger.info("Installing hooks...");
 	endless::register_hooks();
   PaperLogger.info("Installed all hooks!");
+
+	endless::check_for_incompatible_mods();
 }

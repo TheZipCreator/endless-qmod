@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "UnityEngine/Object.hpp"
 
 #include "GlobalNamespace/PlayerDataModel.hpp"
@@ -19,6 +21,7 @@
 
 #include "misc.hpp"
 #include "main.hpp"
+
 
 namespace endless {
 	GlobalNamespace::BeatmapDifficulty string_to_difficulty(std::string string) {
@@ -92,5 +95,23 @@ namespace endless {
 		);
 		PaperLogger.info("Level started.");
 		return true;
+	}
+	const std::vector<std::string> incompatible_mods = {"Replay"};
+	std::vector<std::string> enabled_incompatible_mods = {};
+	void check_for_incompatible_mods(void) {
+		enabled_incompatible_mods.clear();
+		for(auto &mod_result : modloader::get_all()) {
+			if(auto mod_info = std::get_if<modloader::ModData>(&mod_result)) {
+				auto id = mod_info->info.id;
+				for(std::string iid : incompatible_mods) {
+					if(id == iid) {
+						enabled_incompatible_mods.push_back(id);
+						PaperLogger.warn("Incompatible mod {} found.", id);
+						goto continue_outer; // no labelled continue in C++
+					}
+				}
+			}
+			continue_outer:;
+		}
 	}
 }
