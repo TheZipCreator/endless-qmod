@@ -36,12 +36,26 @@ namespace endless {
 		BSML::Lite::CreateToggle(container->get_transform(), "Continue on Fail", getModConfig().continue_on_fail.GetValue(), [](bool value) {
 			getModConfig().continue_on_fail.SetValue(value);
 		});
+
+		// difficulty
 		// I don't know if this is what you're supposed to do but it compiles
 		std::vector<std::string_view> difficulties{"Easy", "Normal", "Hard", "Expert", "Expert+"};
-		std::span difficulties_span { difficulties };
+		std::span difficulties_span{ difficulties };
 		BSML::Lite::CreateDropdown(container->get_transform(), "Difficulty", getModConfig().difficulty.GetValue(), difficulties_span, [](StringW string) {
 			getModConfig().difficulty.SetValue(string);
 		});
+
+		// mods
+		std::vector<std::string_view> allow_state{"Allowed", "Required", "Forbidden"};
+		std::span allow_state_span{ allow_state };
+		BSML::Lite::CreateDropdown(container->get_transform(), "Noodle Extensions", getModConfig().noodle_extensions.GetValue(), allow_state, [](StringW string) {
+			getModConfig().noodle_extensions.SetValue(string);
+		});
+		BSML::Lite::CreateDropdown(container->get_transform(), "Chroma", getModConfig().chroma.GetValue(), allow_state, [](StringW string) {
+			getModConfig().chroma.SetValue(string);
+		});
+
+		// start button
 		BSML::Lite::CreateUIButton(container->get_transform(), "Start!", []() {
 			start_endless();
 		});

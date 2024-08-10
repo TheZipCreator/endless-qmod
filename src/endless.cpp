@@ -71,7 +71,6 @@ MAKE_HOOK_MATCH(game_finish_hook, &GlobalNamespace::MenuTransitionsHelper::Handl
 		})));
 		return;
 	}
-	PaperLogger.debug("normal");
 	endless::state.activated = false;
 	game_finish_hook(self, slstsdSO, lcr);
 }
@@ -129,8 +128,10 @@ namespace endless {
 			// 		return false;
 			// }
 
-			// make sure requirements are met
+			// check requirements/suggestions are met
 			{
+				bool has_noodle = false;
+				bool has_chroma = false;
 				auto csdi = level->CustomSaveDataInfo;
 				auto bcdbd = csdi->get().TryGetCharacteristicAndDifficulty(characteristic->_serializedName, difficulty);
 				if(bcdbd != std::nullopt) {
@@ -138,8 +139,29 @@ namespace endless {
 						if(!SongCore::API::Capabilities::IsCapabilityRegistered(requirement)) {
 							return false;
 						}
+						if(requirement == "Noodle Extensions")
+							has_noodle = true;
+						else if(requirement == "Chroma")
+							has_chroma = true;
+					}
+					for(std::string suggestion : bcdbd.value().get().suggestions) {
+						if(suggestion == "Noodle Extensions")
+							has_noodle = true;
+						else if(suggestion == "Chroma")
+							has_chroma = true;
 					}
 				}
+				auto is_fine = [](bool has_mod, std::string allow_state) -> bool {
+					if(allow_state == "Forbidden")
+						return !has_mod;
+					if(allow_state == "Required")
+						return has_mod;
+					return true;
+				};
+				if(!is_fine(has_noodle, getModConfig().noodle_extensions.GetValue()))
+					return false;
+				if(!is_fine(has_chroma, getModConfig().chroma.GetValue()))
+					return false;
 			}
 			return true;
 		});
