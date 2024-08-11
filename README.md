@@ -1,6 +1,12 @@
 # Endless
+*Play endlessly, or at least until you fail.*
 
-Allows you to play endlessly, or at least until you fail.
+Adds an Endless mode to Beat Saber, accessible via a gameplay setup tab. You can configure what features the maps being played should have, such as:
+* Difficulty
+* Requirements (Noodle Extensions, Chroma)
+* Playlist (can be set to "All" if you want to use all maps)
+
+**IMPORTANT:** This mod has issues with Replay; you will most likely encounter crashes with Replay enabled.
 
 Use `qpm s build` to build
 
