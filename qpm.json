@@ -94,6 +94,11 @@
       "id": "songcore",
       "versionRange": "^1.1.15",
       "additionalData": {}
+    },
+    {
+      "id": "playlistcore",
+      "versionRange": "^1.4.2",
+      "additionalData": {}
     }
   ]
 }

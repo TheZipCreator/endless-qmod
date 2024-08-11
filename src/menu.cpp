@@ -1,14 +1,16 @@
 #include "TMPro/FontStyles.hpp"
 
 #include "bsml/shared/BSML.hpp"
-#include "modconfig.hpp"
 
+#include "modconfig.hpp"
 #include "menu.hpp"
 #include "main.hpp"
 #include "endless.hpp"
 #include "misc.hpp"
 
 namespace endless {
+	PlaylistCore::Playlist *selected_playlist = nullptr;
+
 	void did_activate(UnityEngine::GameObject *self, bool firstActivation) {
 		if(!firstActivation)
 			return;
@@ -39,6 +41,26 @@ namespace endless {
 		BSML::Lite::CreateToggle(container->transform, "Endless HUD Enabled", getModConfig().hud_enabled.GetValue(), [](bool value) {
 			getModConfig().hud_enabled.SetValue(value);
 		});
+
+		// playlist
+		std::vector<std::string_view> playlist_names = {"All"};
+		std::vector<PlaylistCore::Playlist *> playlists = PlaylistCore::GetLoadedPlaylists();
+		for(PlaylistCore::Playlist *playlist : playlists) {
+			playlist_names.push_back(playlist->name);
+		}
+		std::span playlists_span{ playlist_names };
+		// this could break if playlists are updated while in-game. FIXME
+		auto dropdown = BSML::Lite::CreateDropdown(container->transform, "Playlist", "All", playlists_span, [playlists](StringW string) {
+			selected_playlist = nullptr;
+			if(string == "All")
+				return;
+			for(PlaylistCore::Playlist *playlist : playlists) {
+				if(playlist->name != string)
+					continue;
+				selected_playlist = playlist;
+			}
+		});
+		
 
 		// difficulty
 		// I don't know if this is what you're supposed to do but it compiles

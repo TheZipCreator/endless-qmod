@@ -41,6 +41,7 @@
 #include "endless.hpp"
 #include "main.hpp"
 #include "modconfig.hpp"
+#include "menu.hpp"
 
 
 // whether endless mode should be continued
@@ -243,8 +244,15 @@ namespace endless {
 		auto characteristic = get_characteristic(getModConfig().characteristic.GetValue());
 		RETURN_IF_NULL(characteristic, std::nullopt);
 		auto difficulty = string_to_difficulty(getModConfig().difficulty.GetValue());
-		// get all levels
-		auto levels = SongCore::API::Loading::GetAllLevels();
+		// get levels in the selected playlist
+		std::vector<SongCore::SongLoader::CustomBeatmapLevel *> levels;
+		if(selected_playlist == nullptr)
+			for(auto level : SongCore::API::Loading::GetAllLevels())
+				levels.push_back(level);
+		else {
+			for(auto level : selected_playlist->playlistCS->beatmapLevels)
+				levels.push_back(reinterpret_cast<SongCore::SongLoader::CustomBeatmapLevel *>(level));
+		}
 		// filter levels by if they have the correct parameters
 		std::vector<GlobalNamespace::BeatmapLevel *> filtered_levels;
 		std::copy_if(levels.begin(), levels.end(), std::back_inserter(filtered_levels), [difficulty, characteristic, min_nps, max_nps](SongCore::SongLoader::CustomBeatmapLevel *level) {
