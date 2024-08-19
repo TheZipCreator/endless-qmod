@@ -245,17 +245,18 @@ namespace endless {
 		RETURN_IF_NULL(characteristic, std::nullopt);
 		auto difficulty = string_to_difficulty(getModConfig().difficulty.GetValue());
 		// get levels in the selected playlist
-		std::vector<SongCore::SongLoader::CustomBeatmapLevel *> levels;
+		// std::vector<SongCore::SongLoader::CustomBeatmapLevel *> levels;
+		std::vector<GlobalNamespace::BeatmapLevel *> levels;
 		if(selected_playlist == nullptr)
 			for(auto level : SongCore::API::Loading::GetAllLevels())
 				levels.push_back(level);
 		else {
 			for(auto level : selected_playlist->playlistCS->beatmapLevels)
-				levels.push_back(reinterpret_cast<SongCore::SongLoader::CustomBeatmapLevel *>(level));
+				levels.push_back(level);
 		}
 		// filter levels by if they have the correct parameters
 		std::vector<GlobalNamespace::BeatmapLevel *> filtered_levels;
-		std::copy_if(levels.begin(), levels.end(), std::back_inserter(filtered_levels), [difficulty, characteristic, min_nps, max_nps](SongCore::SongLoader::CustomBeatmapLevel *level) {
+		std::copy_if(levels.begin(), levels.end(), std::back_inserter(filtered_levels), [difficulty, characteristic, min_nps, max_nps](GlobalNamespace::BeatmapLevel *level) {
 			// make sure combination exists
 			auto data = level->GetDifficultyBeatmapData(characteristic, difficulty);
 			if(data == nullptr)
@@ -269,28 +270,32 @@ namespace endless {
 			// 	if(nps < min_nps || nps > max_nps)
 			// 		return false;
 			// }
-
+			auto custom_level_opt = il2cpp_utils::try_cast<SongCore::SongLoader::CustomBeatmapLevel>(level);
+			auto custom_level = custom_level_opt == std::nullopt ? nullptr : custom_level_opt.value();
+			
 			// check requirements/suggestions are met
 			{
 				bool has_noodle = false;
 				bool has_chroma = false;
-				auto csdi = level->CustomSaveDataInfo;
-				auto bcdbd = csdi->get().TryGetCharacteristicAndDifficulty(characteristic->_serializedName, difficulty);
-				if(bcdbd != std::nullopt) {
-					for(std::string requirement : bcdbd.value().get().requirements) {
-						if(!SongCore::API::Capabilities::IsCapabilityRegistered(requirement)) {
-							return false;
+				if(custom_level != nullptr) {
+					auto csdi = custom_level->CustomSaveDataInfo;
+					auto bcdbd = csdi->get().TryGetCharacteristicAndDifficulty(characteristic->_serializedName, difficulty);
+					if(bcdbd != std::nullopt) {
+						for(std::string requirement : bcdbd.value().get().requirements) {
+							if(!SongCore::API::Capabilities::IsCapabilityRegistered(requirement)) {
+								return false;
+							}
+							if(requirement == "Noodle Extensions")
+								has_noodle = true;
+							else if(requirement == "Chroma")
+								has_chroma = true;
 						}
-						if(requirement == "Noodle Extensions")
-							has_noodle = true;
-						else if(requirement == "Chroma")
-							has_chroma = true;
-					}
-					for(std::string suggestion : bcdbd.value().get().suggestions) {
-						if(suggestion == "Noodle Extensions")
-							has_noodle = true;
-						else if(suggestion == "Chroma")
-							has_chroma = true;
+						for(std::string suggestion : bcdbd.value().get().suggestions) {
+							if(suggestion == "Noodle Extensions")
+								has_noodle = true;
+							else if(suggestion == "Chroma")
+								has_chroma = true;
+						}
 					}
 				}
 				auto is_fine = [](bool has_mod, std::string allow_state) -> bool {
