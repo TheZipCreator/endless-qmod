@@ -245,7 +245,6 @@ namespace endless {
 		RETURN_IF_NULL(characteristic, std::nullopt);
 		auto difficulty = string_to_difficulty(getModConfig().difficulty.GetValue());
 		// get levels in the selected playlist
-		// std::vector<SongCore::SongLoader::CustomBeatmapLevel *> levels;
 		std::vector<GlobalNamespace::BeatmapLevel *> levels;
 		if(selected_playlist == nullptr)
 			for(auto level : SongCore::API::Loading::GetAllLevels())
