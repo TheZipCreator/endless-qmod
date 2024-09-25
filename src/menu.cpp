@@ -104,7 +104,8 @@ namespace endless {
 			}));
 
 			// start button
-			tab_add_parent(automatic_tab, BSML::Lite::CreateUIButton(container->transform, "Start!", []() {
+			tab_add(automatic_tab, BSML::Lite::CreateUIButton(container->transform, "Start!", []() {
+				calculate_levels(true);
 				start_endless();
 			}));
 		}
@@ -113,7 +114,8 @@ namespace endless {
 			std::vector<std::string_view> _names = {"<None>"};
 
 			// start button
-			tab_add_parent(playset_tab, BSML::Lite::CreateUIButton(container->transform, "Start!", []() {
+			tab_add(playset_tab, BSML::Lite::CreateUIButton(container->transform, "Start!", []() {
+				calculate_levels(false);
 				start_endless();
 			}));
 			

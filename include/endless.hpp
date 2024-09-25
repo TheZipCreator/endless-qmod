@@ -23,8 +23,12 @@ namespace endless {
 		// HUD text
 		SafePtrUnity<HMUI::CurvedTextMeshPro> time_text;
 		SafePtrUnity<HMUI::CurvedTextMeshPro> score_text;
+		// pre-calculated level params (calculated in `calculate_levels()`)
+		std::vector<LevelParams> levels;
 	};
 	extern State state;
+	// calculates levels
+	void calculate_levels(bool automatic);
 	// starts endless mode
 	void start_endless(void);
 	// starts the next level in endless mode. Returns whether it actually started

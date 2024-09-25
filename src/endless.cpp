@@ -208,7 +208,98 @@ namespace endless {
 		return true;
 	}
 
+	void calculate_levels(bool automatic) {
+		PaperLogger.info("Calculating levels...");
+		state.levels = {};
+		if(!SongCore::API::Loading::AreSongsLoaded())
+			return;
+		if(automatic) {
+			// get info
+			auto min_nps = getModConfig().min_nps.GetValue();
+			auto max_nps = getModConfig().max_nps.GetValue();
+			auto characteristic = get_characteristic(getModConfig().characteristic.GetValue());
+			RETURN_IF_NULL(characteristic,);
+			auto difficulty = string_to_difficulty(getModConfig().difficulty.GetValue());
+			// get levels in the selected playlist
+			std::vector<GlobalNamespace::BeatmapLevel *> levels;
+			if(selected_playlist == nullptr)
+				for(auto level : SongCore::API::Loading::GetAllLevels())
+					levels.push_back(level);
+			else {
+				for(auto level : selected_playlist->playlistCS->beatmapLevels)
+					levels.push_back(level);
+			}
+			// filter levels by if they have the correct parameters
+			std::vector<GlobalNamespace::BeatmapLevel *> filtered_levels;
+			std::copy_if(levels.begin(), levels.end(), std::back_inserter(filtered_levels), [difficulty, characteristic, min_nps, max_nps](GlobalNamespace::BeatmapLevel *level) {
+				// make sure combination exists
+				auto data = level->GetDifficultyBeatmapData(characteristic, difficulty);
+				if(data == nullptr)
+					return false;
+				// check NPS
+				// {
+				// 	if(level->songDuration == 0.f)
+				// 		return false; // I doubt this will ever be true but if some evil bastard decides to make 0s long map this will make sure it doesn't crash
+				// 	float nps = static_cast<float>(data->notesCount)/level->songDuration;
+				// 	PaperLogger.debug("nps: {}/{} = {}", data->notesCount, level->songDuration, nps);
+				// 	if(nps < min_nps || nps > max_nps)
+				// 		return false;
+				// }
+				auto custom_level_opt = il2cpp_utils::try_cast<SongCore::SongLoader::CustomBeatmapLevel>(level);
+				auto custom_level = custom_level_opt == std::nullopt ? nullptr : custom_level_opt.value();
+				
+				// check requirements/suggestions are met
+				{
+					bool has_noodle = false;
+					bool has_chroma = false;
+					if(custom_level != nullptr) {
+						auto csdi = custom_level->CustomSaveDataInfo;
+						auto bcdbd = csdi->get().TryGetCharacteristicAndDifficulty(characteristic->_serializedName, difficulty);
+						if(bcdbd != std::nullopt) {
+							for(std::string requirement : bcdbd.value().get().requirements) {
+								if(!SongCore::API::Capabilities::IsCapabilityRegistered(requirement)) {
+									return false;
+								}
+								if(requirement == "Noodle Extensions")
+									has_noodle = true;
+								else if(requirement == "Chroma")
+									has_chroma = true;
+							}
+							for(std::string suggestion : bcdbd.value().get().suggestions) {
+								if(suggestion == "Noodle Extensions")
+									has_noodle = true;
+								else if(suggestion == "Chroma")
+									has_chroma = true;
+							}
+						}
+					}
+					auto is_fine = [](bool has_mod, std::string allow_state) -> bool {
+						if(allow_state == "Forbidden")
+							return !has_mod;
+						if(allow_state == "Required")
+							return has_mod;
+						return true;
+					};
+					if(!is_fine(has_noodle, getModConfig().noodle_extensions.GetValue()))
+						return false;
+					if(!is_fine(has_chroma, getModConfig().chroma.GetValue()))
+						return false;
+				}
+				return true;
+			});
+
+			if(filtered_levels.size() == 0)
+				return;
+			std::transform(filtered_levels.begin(), filtered_levels.end(), std::back_inserter(state.levels), [=](GlobalNamespace::BeatmapLevel *level) {
+				return LevelParams{level, characteristic, difficulty};
+			});	
+		} else {
+			// TODO
+		}
+	}
+
 	void start_endless(void) {
+		// start endless
 		PaperLogger.info("Starting endless mode...");
 		if(!next_level())
 			return;
@@ -236,87 +327,8 @@ namespace endless {
 	}
 
 	std::optional<LevelParams> get_next_level() {
-		if(!SongCore::API::Loading::AreSongsLoaded())
-			return std::nullopt;
-		// get info
-		auto min_nps = getModConfig().min_nps.GetValue();
-		auto max_nps = getModConfig().max_nps.GetValue();
-		auto characteristic = get_characteristic(getModConfig().characteristic.GetValue());
-		RETURN_IF_NULL(characteristic, std::nullopt);
-		auto difficulty = string_to_difficulty(getModConfig().difficulty.GetValue());
-		// get levels in the selected playlist
-		std::vector<GlobalNamespace::BeatmapLevel *> levels;
-		if(selected_playlist == nullptr)
-			for(auto level : SongCore::API::Loading::GetAllLevels())
-				levels.push_back(level);
-		else {
-			for(auto level : selected_playlist->playlistCS->beatmapLevels)
-				levels.push_back(level);
-		}
-		// filter levels by if they have the correct parameters
-		std::vector<GlobalNamespace::BeatmapLevel *> filtered_levels;
-		std::copy_if(levels.begin(), levels.end(), std::back_inserter(filtered_levels), [difficulty, characteristic, min_nps, max_nps](GlobalNamespace::BeatmapLevel *level) {
-			// make sure combination exists
-			auto data = level->GetDifficultyBeatmapData(characteristic, difficulty);
-			if(data == nullptr)
-				return false;
-			// check NPS
-			// {
-			// 	if(level->songDuration == 0.f)
-			// 		return false; // I doubt this will ever be true but if some evil bastard decides to make 0s long map this will make sure it doesn't crash
-			// 	float nps = static_cast<float>(data->notesCount)/level->songDuration;
-			// 	PaperLogger.debug("nps: {}/{} = {}", data->notesCount, level->songDuration, nps);
-			// 	if(nps < min_nps || nps > max_nps)
-			// 		return false;
-			// }
-			auto custom_level_opt = il2cpp_utils::try_cast<SongCore::SongLoader::CustomBeatmapLevel>(level);
-			auto custom_level = custom_level_opt == std::nullopt ? nullptr : custom_level_opt.value();
-			
-			// check requirements/suggestions are met
-			{
-				bool has_noodle = false;
-				bool has_chroma = false;
-				if(custom_level != nullptr) {
-					auto csdi = custom_level->CustomSaveDataInfo;
-					auto bcdbd = csdi->get().TryGetCharacteristicAndDifficulty(characteristic->_serializedName, difficulty);
-					if(bcdbd != std::nullopt) {
-						for(std::string requirement : bcdbd.value().get().requirements) {
-							if(!SongCore::API::Capabilities::IsCapabilityRegistered(requirement)) {
-								return false;
-							}
-							if(requirement == "Noodle Extensions")
-								has_noodle = true;
-							else if(requirement == "Chroma")
-								has_chroma = true;
-						}
-						for(std::string suggestion : bcdbd.value().get().suggestions) {
-							if(suggestion == "Noodle Extensions")
-								has_noodle = true;
-							else if(suggestion == "Chroma")
-								has_chroma = true;
-						}
-					}
-				}
-				auto is_fine = [](bool has_mod, std::string allow_state) -> bool {
-					if(allow_state == "Forbidden")
-						return !has_mod;
-					if(allow_state == "Required")
-						return has_mod;
-					return true;
-				};
-				if(!is_fine(has_noodle, getModConfig().noodle_extensions.GetValue()))
-					return false;
-				if(!is_fine(has_chroma, getModConfig().chroma.GetValue()))
-					return false;
-			}
-			return true;
-		});
-		if(filtered_levels.size() == 0)
-			return std::nullopt;
-		
 		// pick random level
-		auto level = filtered_levels[std::rand()%filtered_levels.size()];
-		return LevelParams{level, characteristic, difficulty};
+		return state.levels[std::rand()%state.levels.size()];
 	}
 	void register_hooks() {
 		INSTALL_HOOK(PaperLogger, PauseMenuManager_Start);
