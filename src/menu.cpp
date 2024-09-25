@@ -41,6 +41,8 @@ namespace endless {
 		BSML::Lite::CreateToggle(container->transform, "Endless HUD Enabled", getModConfig().hud_enabled.GetValue(), [](bool value) {
 			getModConfig().hud_enabled.SetValue(value);
 		});
+		
+
 
 		// playlist
 		std::vector<std::string_view> playlist_names = {"All"};
@@ -48,9 +50,8 @@ namespace endless {
 		for(PlaylistCore::Playlist *playlist : playlists) {
 			playlist_names.push_back(playlist->name);
 		}
-		std::span playlists_span{ playlist_names };
 		// this could break if playlists are updated while in-game. FIXME
-		auto dropdown = BSML::Lite::CreateDropdown(container->transform, "Playlist", "All", playlists_span, [playlists](StringW string) {
+		auto dropdown = BSML::Lite::CreateDropdown(container->transform, "Playlist", "All", playlist_names, [playlists](StringW string) {
 			selected_playlist = nullptr;
 			if(string == "All")
 				return;
@@ -65,14 +66,12 @@ namespace endless {
 		// difficulty
 		// I don't know if this is what you're supposed to do but it compiles
 		std::vector<std::string_view> difficulties{"Easy", "Normal", "Hard", "Expert", "Expert+"};
-		std::span difficulties_span{ difficulties };
-		BSML::Lite::CreateDropdown(container->transform, "Difficulty", getModConfig().difficulty.GetValue(), difficulties_span, [](StringW string) {
+		BSML::Lite::CreateDropdown(container->transform, "Difficulty", getModConfig().difficulty.GetValue(), difficulties, [](StringW string) {
 			getModConfig().difficulty.SetValue(string);
 		});
 
 		// mods
 		std::vector<std::string_view> allow_state{"Allowed", "Required", "Forbidden"};
-		std::span allow_state_span{ allow_state };
 		BSML::Lite::CreateDropdown(container->transform, "Noodle Extensions", getModConfig().noodle_extensions.GetValue(), allow_state, [](StringW string) {
 			getModConfig().noodle_extensions.SetValue(string);
 		});
