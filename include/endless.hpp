@@ -38,5 +38,5 @@ namespace endless {
 	// Returns the next level, if one can be found
 	std::optional<LevelParams> get_next_level();
 	// registers hooks
-	void register_hooks(void);
+	void register_endless_hooks(void);
 }

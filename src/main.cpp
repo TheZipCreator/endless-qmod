@@ -33,7 +33,8 @@ MOD_EXTERN_FUNC void late_load() noexcept {
 	getModConfig().Init(modInfo);
 
   PaperLogger.info("Installing hooks...");
-	endless::register_hooks();
+	endless::register_endless_hooks();
+	endless::register_menu_hooks();
   PaperLogger.info("Installed all hooks!");
 
 	endless::check_for_incompatible_mods();

@@ -11,4 +11,7 @@ namespace endless {
 	extern int selected_playset;
 	// did_activate method for BSML
 	void did_activate(UnityEngine::GameObject *self, bool firstActivation);
+	
+	// registers menu hooks
+	void register_menu_hooks(void);
 }

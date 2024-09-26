@@ -330,7 +330,7 @@ namespace endless {
 		// pick random level
 		return state.levels[std::rand()%state.levels.size()];
 	}
-	void register_hooks() {
+	void register_endless_hooks() {
 		INSTALL_HOOK(PaperLogger, PauseMenuManager_Start);
 		INSTALL_HOOK(PaperLogger, PauseMenuManager_MenuButtonPressed);
 

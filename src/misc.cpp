@@ -13,17 +13,46 @@
 #include "GlobalNamespace/RecordingToolManager.hpp"
 #include "GlobalNamespace/GameplaySetupViewController.hpp"
 #include "GlobalNamespace/ColorSchemesSettings.hpp"
+#include "GlobalNamespace/BeatmapLevelsModel.hpp"
+#include "GlobalNamespace/MainFlowCoordinator.hpp"
+#include "UnityEngine/Resources.hpp"
+#include "GlobalNamespace/LevelBar.hpp"
+#include "TMPro/TextMeshProUGUI.hpp"
+
 
 #include "System/Action_2.hpp"
 #include "System/Nullable_1.hpp"
 
 #include "custom-types/shared/delegate.hpp"
 
+#include "songcore/shared/SongCore.hpp"
+
 #include "misc.hpp"
 #include "main.hpp"
 
 
 namespace endless {
+	std::optional<LevelParams> LevelParams::from_playset_beatmap(PlaysetBeatmap psb) {
+		auto level = get_beatmap(psb.id);
+		if(level == nullptr) {
+			PaperLogger.warn("Level with id '{}' not found.", psb.id);
+			return std::nullopt;
+		}
+		auto characteristic = get_characteristic(psb.characteristic);
+		if(characteristic == nullptr) {
+			PaperLogger.warn("Characteristic '{}' not found.", psb.characteristic);
+			return std::nullopt;
+		}
+		return LevelParams(level, characteristic, string_to_difficulty(psb.difficulty));
+	}
+	std::optional<LevelParams> LevelParams::from_beatmap_key(GlobalNamespace::BeatmapKey key) {
+		auto level = get_beatmap(key.levelId);
+		if(level == nullptr) {
+			PaperLogger.warn("Level with id '{}' not found.", key.levelId);
+			return std::nullopt;
+		}
+		return LevelParams(level, key.beatmapCharacteristic, key.difficulty);
+	}
 	GlobalNamespace::BeatmapDifficulty string_to_difficulty(std::string string) {
 		// don't know why C++ doesn't have string switches
 		if(string == "Easy")
@@ -112,5 +141,25 @@ namespace endless {
 			}
 			continue_outer:;
 		}
+	}
+	GlobalNamespace::BeatmapLevel *get_beatmap(std::string id) {
+		// try builtin levels
+		auto bmlm = UnityEngine::Resources::FindObjectsOfTypeAll<GlobalNamespace::MainFlowCoordinator *>()[0]->_beatmapLevelsModel;
+		RETURN_IF_NULL(bmlm, nullptr);
+		auto level = bmlm->GetBeatmapLevel(id);
+		if(level != nullptr)
+			return level;
+		// try songcore
+		level = static_cast<GlobalNamespace::BeatmapLevel *>(SongCore::API::Loading::GetLevelByLevelID(id));
+		if(level != nullptr)
+			return level;
+		return nullptr;
+	}
+	GlobalNamespace::LevelBar *create_level_bar(UnityEngine::Transform *parent, LevelParams params) {
+		auto level_bar = UnityEngine::Object::Instantiate(UnityEngine::Resources::FindObjectsOfTypeAll<GlobalNamespace::LevelBar *>()[0], parent);
+		level_bar->hide = false;
+		level_bar->_showDifficultyAndCharacteristic = true;
+		level_bar->Setup(params.level, params.difficulty, params.characteristic);
+		return level_bar;
 	}
 }
