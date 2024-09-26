@@ -21,15 +21,7 @@
 
 static std::optional<endless::PlaysetBeatmap> selected_level = std::nullopt;
 
-MAKE_HOOK_MATCH(
-	LevelCollectionNavigationController_HandleLevelCollectionViewControllerDidSelectLevel, // what a fucking name 
-	&GlobalNamespace::LevelCollectionNavigationController::HandleLevelCollectionViewControllerDidSelectLevel, 
-	void, 
-	GlobalNamespace::LevelCollectionNavigationController *self,
-	GlobalNamespace::LevelCollectionViewController *viewController,
-	GlobalNamespace::BeatmapLevel *level
-) {
-	LevelCollectionNavigationController_HandleLevelCollectionViewControllerDidSelectLevel(self, viewController, level);
+static void update_selected_level(GlobalNamespace::LevelCollectionNavigationController *self) {
 	auto key = self->beatmapKey;
 	if(!key.IsValid()) {
 		selected_level = std::nullopt;
@@ -42,12 +34,36 @@ MAKE_HOOK_MATCH(
 	selected_level = pbm;
 }
 
+MAKE_HOOK_MATCH(
+	LevelCollectionNavigationController_HandleLevelCollectionViewControllerDidSelectLevel, // what a fucking name 
+	&GlobalNamespace::LevelCollectionNavigationController::HandleLevelCollectionViewControllerDidSelectLevel, 
+	void, 
+	GlobalNamespace::LevelCollectionNavigationController *self,
+	GlobalNamespace::LevelCollectionViewController *viewController,
+	GlobalNamespace::BeatmapLevel *level
+) {
+	LevelCollectionNavigationController_HandleLevelCollectionViewControllerDidSelectLevel(self, viewController, level);
+	update_selected_level(self);
+}
+
+MAKE_HOOK_MATCH(
+	LevelCollectionNavigationController_HandleLevelDetailViewControllerDidChangeDifficultyBeatmap, // holy shit an even longer name. why would you name a method like this
+	&GlobalNamespace::LevelCollectionNavigationController::HandleLevelDetailViewControllerDidChangeDifficultyBeatmap, 
+	void, 
+	GlobalNamespace::LevelCollectionNavigationController *self,
+	GlobalNamespace::StandardLevelDetailViewController *viewController
+) {
+	LevelCollectionNavigationController_HandleLevelDetailViewControllerDidChangeDifficultyBeatmap(self, viewController);
+	update_selected_level(self);
+}
+
 namespace endless {
 	PlaylistCore::Playlist *selected_playlist = nullptr;
 	int selected_playset = -1;
 
 	void register_menu_hooks(void) {
 		INSTALL_HOOK(PaperLogger, LevelCollectionNavigationController_HandleLevelCollectionViewControllerDidSelectLevel);
+		INSTALL_HOOK(PaperLogger, LevelCollectionNavigationController_HandleLevelDetailViewControllerDidChangeDifficultyBeatmap);
 	}
 	
 	// add an object's parent to a tab
@@ -97,6 +113,7 @@ namespace endless {
 		
 		auto automatic_tab = std::make_shared<std::vector<UnityW<UnityEngine::GameObject>>>();
 		auto playset_tab = std::make_shared<std::vector<UnityW<UnityEngine::GameObject>>>();
+		auto playset_tab_extra = std::make_shared<std::vector<UnityW<UnityEngine::GameObject>>>(); // things that only get displayed when an actual playset is selected
 		auto level_bars = std::make_shared<std::vector<UnityW<UnityEngine::GameObject>>>();
 		
 		std::vector<std::string_view> tabs = {"Automatic", "Playset"};
@@ -105,6 +122,8 @@ namespace endless {
 			for(auto go : *automatic_tab)
 				go->active = idx == 0;
 			for(auto go : *playset_tab)
+				go->active = idx == 1;
+			for(auto go : *playset_tab_extra)
 				go->active = idx == 1;
 			for(auto go : *level_bars)
 				go->active = idx == 1;
@@ -152,20 +171,44 @@ namespace endless {
 		}
 		// playset
 		{
-			#define ADD_LEVEL_BAR(INDEX, PARAMS) do { \
-				auto _params = (PARAMS); \
-				size_t level_bars_index = level_bars->size(); \
-				auto level_bar = tab_add(level_bars, create_level_bar(container->transform, _params)); \
-				/* TODO: remove favorites icon; also fix crash when removing last song */ \
-				tab_add(level_bars, BSML::Lite::CreateUIButton(container->transform, "Remove", [=]() { \
-					UnityEngine::Object::Destroy((*level_bars)[level_bars_index]); \
-					UnityEngine::Object::Destroy((*level_bars)[level_bars_index+1]); /* sneaky way to delete this button */ \
-					level_bars->erase(level_bars->begin() + level_bars_index, level_bars->begin() + level_bars_index + 2); \
-					auto _playsets = getModConfig().playsets.GetValue(); \
-					_playsets[selected_playset].beatmaps.erase(_playsets[selected_playset].beatmaps.begin() + (INDEX)); \
-					getModConfig().playsets.SetValue(_playsets); \
-				})); \
-			} while(0)
+			auto add_level_bar = [=](LevelParams params) {
+				auto level_bar = tab_add(level_bars, create_level_bar(container->transform, params));
+				tab_add(level_bars, BSML::Lite::CreateUIButton(container->transform, "Remove", [=]() {
+					auto playsets = getModConfig().playsets.GetValue();
+					auto beatmaps = &playsets[selected_playset].beatmaps; // beatmaps in the currently selected playset
+					// find index of the level bar in level_bars
+					int level_bars_index = -1;
+					for(int i = 0; i < level_bars->size(); i++) {
+						if((*level_bars)[i] == level_bar->gameObject) {
+							level_bars_index = i;
+							break;
+						}
+					}
+					if(level_bars_index == -1) {
+						PaperLogger.warn("Level bar not found!");
+						return;
+					}
+					// find index of the beatmap in beatmaps
+					int beatmap_index = -1;
+					for(int i = 0; i < beatmaps->size(); i++) {
+						auto pbm = (*beatmaps)[i];
+						if(pbm.id == params.level->levelID && pbm.difficulty == difficulty_to_string(params.difficulty) && pbm.characteristic == params.characteristic->_serializedName) {
+							beatmap_index = i;
+						}
+					}
+					if(beatmap_index == -1) {
+						PaperLogger.warn("Playset beatmap not found!");
+						return;
+					}
+					// delete ui
+					UnityEngine::Object::Destroy((*level_bars)[level_bars_index]);
+					UnityEngine::Object::Destroy((*level_bars)[level_bars_index+1]); // sneaky way to delete this button
+					// remove beatmap from playset
+					level_bars->erase(level_bars->begin() + level_bars_index, level_bars->begin() + level_bars_index + 2);
+					beatmaps->erase(beatmaps->begin() + beatmap_index);
+					getModConfig().playsets.SetValue(playsets);
+				}));
+			};
 			std::vector<std::string_view> playset_names = {"<None>"};
 			auto playset_dropdown = tab_add_parent(playset_tab, BSML::Lite::CreateDropdown(container->transform, "Playset", "<None>", playset_names, [=](StringW string) {
 				selected_playset = -1;
@@ -179,17 +222,16 @@ namespace endless {
 				for(auto go : *level_bars)
 					UnityEngine::Object::Destroy(go);
 				level_bars->clear();
+				for(auto go : *playset_tab_extra)
+					go->active = selected_playset != -1;
 				if(selected_playset == -1)
 					return;
-				size_t i = 0;
 				for(auto psb : playsets[selected_playset].beatmaps) {
 					auto params = LevelParams::from_playset_beatmap(psb);
 					if(!params.has_value()) {
-						i++;
 						continue;
 					}
-					ADD_LEVEL_BAR(i, params.value());
-					i++;
+					add_level_bar(params.value());
 				}
 			}));
 			#define UPDATE_PLAYSET_DROPDOWN() do { \
@@ -226,7 +268,7 @@ namespace endless {
 				UPDATE_PLAYSET_DROPDOWN();
 				playset_dropdown->dropdown->SelectCellWithIdx(playsets.size());
 			});
-			BSML::Lite::CreateUIButton(hgroup->transform, "Delete Playset", [=]() {
+			tab_add(playset_tab_extra, BSML::Lite::CreateUIButton(hgroup->transform, "Delete Playset", [=]() {
 				if(selected_playset == -1)
 					return;
 				auto playsets = getModConfig().playsets.GetValue();
@@ -234,29 +276,38 @@ namespace endless {
 				getModConfig().playsets.SetValue(playsets);
 				UPDATE_PLAYSET_DROPDOWN();
 				playset_dropdown->dropdown->SelectCellWithIdx(0);
-			});
+			}));
 			// start button
-			BSML::Lite::CreateUIButton(hgroup->transform, "Start!", []() {
+			tab_add(playset_tab_extra, BSML::Lite::CreateUIButton(hgroup->transform, "Start!", []() {
 				calculate_levels(false);
 				start_endless();
-			});	
-			tab_add(playset_tab, BSML::Lite::CreateText(container->transform, "Levels in this playset:", TMPro::FontStyles::Normal, {0, 0}, {0, 10}));
-			tab_add(playset_tab, BSML::Lite::CreateUIButton(container->transform, "Add Selected Level to Playset", [=]() {
+			}));	
+			std::string playset_text = "--- Levels in this playset ---\nTo add levels, first select the level you want to add (as if you were\nabout to play it). Then, press the button below to add it to the playset.";
+			tab_add(playset_tab_extra, BSML::Lite::CreateText(container->transform, playset_text, TMPro::FontStyles::Normal, {0, 0}, {0, 16}));
+			tab_add(playset_tab_extra, BSML::Lite::CreateUIButton(container->transform, "Add Level to Playset", [=]() {
 				if(selected_playset != -1 && selected_level) {
+					auto level = selected_level.value();
 					auto playsets = getModConfig().playsets.GetValue();
-					playsets[selected_playset].beatmaps.push_back(selected_level.value());
+					auto beatmaps = &playsets[selected_playset].beatmaps;
+					// make sure that the selected_level is not already in beatmaps
+					for(auto pbm : *beatmaps)
+						if(pbm == level)
+							return;
+					// add level to beatmaps
+					beatmaps->push_back(level);
 					getModConfig().playsets.SetValue(playsets);
 					auto params = LevelParams::from_playset_beatmap(selected_level.value());
 					if(!params.has_value())
 						return;
-					ADD_LEVEL_BAR(playsets[selected_playset].beatmaps.size()-1, params.value());
+					add_level_bar(params.value());
 				}
 			}));
 			#undef UPDATE_PLAYSET_DROPDOWN
-			#undef ADD_LEVEL_BAR
 			
 		}
 		for(auto go : *playset_tab)
+			go->active = false;
+		for(auto go : *playset_tab_extra)
 			go->active = false;
 	}
 }

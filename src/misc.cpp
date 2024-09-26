@@ -15,6 +15,7 @@
 #include "GlobalNamespace/ColorSchemesSettings.hpp"
 #include "GlobalNamespace/BeatmapLevelsModel.hpp"
 #include "GlobalNamespace/MainFlowCoordinator.hpp"
+#include "GlobalNamespace/ResultsViewController.hpp"
 #include "UnityEngine/Resources.hpp"
 #include "GlobalNamespace/LevelBar.hpp"
 #include "TMPro/TextMeshProUGUI.hpp"
@@ -156,7 +157,7 @@ namespace endless {
 		return nullptr;
 	}
 	GlobalNamespace::LevelBar *create_level_bar(UnityEngine::Transform *parent, LevelParams params) {
-		auto level_bar = UnityEngine::Object::Instantiate(UnityEngine::Resources::FindObjectsOfTypeAll<GlobalNamespace::LevelBar *>()[0], parent);
+		auto level_bar = UnityEngine::Object::Instantiate(UnityEngine::Resources::FindObjectsOfTypeAll<GlobalNamespace::ResultsViewController *>()[0]->_levelBar, parent);
 		level_bar->hide = false;
 		level_bar->_showDifficultyAndCharacteristic = true;
 		level_bar->Setup(params.level, params.difficulty, params.characteristic);

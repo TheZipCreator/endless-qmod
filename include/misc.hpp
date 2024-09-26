@@ -22,6 +22,10 @@
 
 
 namespace endless {
+	// converts a string to a difficulty
+	GlobalNamespace::BeatmapDifficulty string_to_difficulty(std::string string);
+	// converts a difficulty to a string
+	std::string difficulty_to_string(GlobalNamespace::BeatmapDifficulty dif); 	
 	// level with difficulty and characteristic
 	struct LevelParams {
 		GlobalNamespace::BeatmapLevel *level;
@@ -31,10 +35,6 @@ namespace endless {
 		static std::optional<LevelParams> from_playset_beatmap(PlaysetBeatmap psb);
 		static std::optional<LevelParams> from_beatmap_key(GlobalNamespace::BeatmapKey key);
 	};
-	// converts a string to a difficulty
-	GlobalNamespace::BeatmapDifficulty string_to_difficulty(std::string string);
-	// converts a difficulty to a string
-	std::string difficulty_to_string(GlobalNamespace::BeatmapDifficulty dif); 	
 	// gets a characteristic by name. returns `null` if it can't be found.
 	GlobalNamespace::BeatmapCharacteristicSO *get_characteristic(std::string name);
 	// starts playing a level. Returns `true` if the level was successfully started, `false` otherwise.
