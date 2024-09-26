@@ -79,10 +79,20 @@ namespace endless {
 		tab->push_back(object->gameObject);
 		return object;
 	}
+	
+	// sets a tab's visibility
+	static void tab_set_visible(std::shared_ptr<std::vector<UnityW<UnityEngine::GameObject>>> tab, bool visible) {
+		for(auto go : *tab)
+			go->active = visible;
+	}
 
 	void did_activate(UnityEngine::GameObject *self, bool firstActivation) {
 		if(!firstActivation)
 			return;
+
+		// this entire function is extremely jank and I hate all of it. Please, do not copy this code it's so bad.
+		// this is my punishment for using BSML::Lite and not learning how to properly use BSML I guess
+
 		auto container = BSML::Lite::CreateScrollableSettingsContainer(self->transform);
 		// add incompatible mods warning if applicable
 		if(enabled_incompatible_mods.size() > 0) {
@@ -119,14 +129,10 @@ namespace endless {
 		std::vector<std::string_view> tabs = {"Automatic", "Playset"};
 		std::span<std::string_view> tab_span { tabs }; // don't know why doing this is necessary /here/ but nowhere else.
 		auto tsc = BSML::Lite::CreateTextSegmentedControl(container->transform, tab_span, [=](int idx){
-			for(auto go : *automatic_tab)
-				go->active = idx == 0;
-			for(auto go : *playset_tab)
-				go->active = idx == 1;
-			for(auto go : *playset_tab_extra)
-				go->active = idx == 1 && selected_playset != -1;
-			for(auto go : *level_bars)
-				go->active = idx == 1;
+			tab_set_visible(automatic_tab, idx == 0);
+			tab_set_visible(playset_tab, idx == 1);
+			tab_set_visible(playset_tab_extra, idx == 1 && selected_playset != -1);
+			tab_set_visible(level_bars, idx == 1);
 		});
 		// automatic
 		{
@@ -222,8 +228,7 @@ namespace endless {
 				for(auto go : *level_bars)
 					UnityEngine::Object::Destroy(go);
 				level_bars->clear();
-				for(auto go : *playset_tab_extra)
-					go->active = selected_playset != -1;
+				tab_set_visible(playset_tab_extra, selected_playset != -1);
 				if(selected_playset == -1)
 					return;
 				for(auto psb : playsets[selected_playset].beatmaps) {
@@ -267,6 +272,9 @@ namespace endless {
 				getModConfig().playsets.SetValue(playsets);
 				UPDATE_PLAYSET_DROPDOWN();
 				playset_dropdown->dropdown->SelectCellWithIdx(playsets.size());
+				tab_set_visible(playset_tab_extra, true);
+				for(auto go : *level_bars)
+					UnityEngine::Object::Destroy(go);
 			});
 			tab_add(playset_tab_extra, BSML::Lite::CreateUIButton(hgroup->transform, "Delete Playset", [=]() {
 				if(selected_playset == -1)
@@ -276,8 +284,9 @@ namespace endless {
 				getModConfig().playsets.SetValue(playsets);
 				UPDATE_PLAYSET_DROPDOWN();
 				playset_dropdown->dropdown->SelectCellWithIdx(0);
-				for(auto go : *playset_tab_extra)
-					go->active = false;
+				tab_set_visible(playset_tab_extra, false);
+				for(auto go : *level_bars)
+					UnityEngine::Object::Destroy(go);
 			}));
 			// start button
 			tab_add(playset_tab_extra, BSML::Lite::CreateUIButton(hgroup->transform, "Start!", []() {
@@ -307,9 +316,7 @@ namespace endless {
 			#undef UPDATE_PLAYSET_DROPDOWN
 			
 		}
-		for(auto go : *playset_tab)
-			go->active = false;
-		for(auto go : *playset_tab_extra)
-			go->active = false;
+		tab_set_visible(playset_tab, false);
+		tab_set_visible(playset_tab_extra, false);
 	}
 }
