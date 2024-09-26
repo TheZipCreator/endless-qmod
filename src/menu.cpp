@@ -124,7 +124,7 @@ namespace endless {
 			for(auto go : *playset_tab)
 				go->active = idx == 1;
 			for(auto go : *playset_tab_extra)
-				go->active = idx == 1;
+				go->active = idx == 1 && selected_playset != -1;
 			for(auto go : *level_bars)
 				go->active = idx == 1;
 		});
