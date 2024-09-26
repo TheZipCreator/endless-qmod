@@ -197,7 +197,7 @@ namespace endless {
 	bool next_level(void) {
 		auto levelParams = get_next_level();
 		if(levelParams == std::nullopt) {
-			PaperLogger.warn("No available levels matching given criteria");
+			PaperLogger.warn("No available levels could be found.");
 			return false;
 		}
 		PaperLogger.info("Starting next level...");
@@ -294,7 +294,17 @@ namespace endless {
 				return LevelParams{level, characteristic, difficulty};
 			});	
 		} else {
-			// TODO
+			// playset
+			if(selected_playset == -1)
+				return;
+			auto beatmaps = getModConfig().playsets.GetValue()[selected_playset].beatmaps;
+			for(auto pbm : beatmaps) {
+				auto lp = LevelParams::from_playset_beatmap(pbm);
+				if(lp)
+					state.levels.push_back(lp.value());
+				else
+					PaperLogger.warn("Found invalid level in playset.");
+			}
 		}
 	}
 
@@ -327,6 +337,8 @@ namespace endless {
 	}
 
 	std::optional<LevelParams> get_next_level() {
+		if(state.levels.size() == 0)
+			return std::nullopt;
 		// pick random level
 		return state.levels[std::rand()%state.levels.size()];
 	}

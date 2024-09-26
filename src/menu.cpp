@@ -276,6 +276,8 @@ namespace endless {
 				getModConfig().playsets.SetValue(playsets);
 				UPDATE_PLAYSET_DROPDOWN();
 				playset_dropdown->dropdown->SelectCellWithIdx(0);
+				for(auto go : *playset_tab_extra)
+					go->active = false;
 			}));
 			// start button
 			tab_add(playset_tab_extra, BSML::Lite::CreateUIButton(hgroup->transform, "Start!", []() {
