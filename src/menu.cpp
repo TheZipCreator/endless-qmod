@@ -14,12 +14,14 @@ namespace endless {
 	PlaylistCore::Playlist *selected_playlist = nullptr;
 	int selected_playset = -1;
 	
+	// add an object's parent to a tab
 	template<class T>
 	static T tab_add_parent(std::shared_ptr<std::vector<UnityEngine::GameObject *>> tab, T object) {
 		tab->push_back(object->transform->parent->gameObject);
 		return object;
 	}
 	
+	// add an object to a tab
 	template<class T>
 	static T tab_add(std::shared_ptr<std::vector<UnityEngine::GameObject *>> tab, T object) {
 		tab->push_back(object->gameObject);
@@ -111,8 +113,60 @@ namespace endless {
 		}
 		// playset
 		{
-			std::vector<std::string_view> _names = {"<None>"};
-
+			std::vector<std::string_view> playset_names = {"<None>"};
+			auto playset_dropdown = tab_add_parent(playset_tab, BSML::Lite::CreateDropdown(container->transform, "Playset", "<None>", playset_names, [=](StringW string) {
+				selected_playset = -1;
+				auto playsets = getModConfig().playsets.GetValue();
+				for(int i = 0; i < playsets.size(); i++) {
+					if(playsets[i].name != string)
+						continue;
+					selected_playset = i;
+					break;
+				}
+			}));
+			#define UPDATE_PLAYSET_DROPDOWN() do { \
+				std::vector<std::string> _playsets = {"<None>"}; \
+				for(Playset playset : getModConfig().playsets.GetValue()) { \
+					_playsets.push_back(playset.name); \
+				} \
+				auto list = ListW<System::Object *>::New(); \
+				list->EnsureCapacity(_playsets.size()); \
+				for(auto name : _playsets) { \
+					list->Add(static_cast<System::Object *>(StringW(name).convert())); \
+				} \
+				playset_dropdown->values = list; \
+				playset_dropdown->UpdateChoices(); \
+			} while(0)
+			UPDATE_PLAYSET_DROPDOWN();
+			auto new_playset_name = tab_add(playset_tab, BSML::Lite::CreateStringSetting(container->transform, "New Playset Name", ""));
+			tab_add(playset_tab, BSML::Lite::CreateUIButton(container->transform, "Create New Playset", [=]() {
+				std::string name = new_playset_name->text;
+				if(name == "")
+					return;
+				// make sure name is not in use
+				for(Playset playset : getModConfig().playsets.GetValue()) {
+					if(playset.name == name)
+						return;
+				}
+				// add playset
+				auto playsets = getModConfig().playsets.GetValue();
+				Playset playset;
+				playset.name = name;
+				playsets.push_back(playset);
+				getModConfig().playsets.SetValue(playsets);
+				UPDATE_PLAYSET_DROPDOWN();
+				playset_dropdown->dropdown->SelectCellWithIdx(playsets.size());
+			}));
+			tab_add(playset_tab, BSML::Lite::CreateUIButton(container->transform, "Delete Playset", [=]() {
+				if(selected_playset == -1)
+					return;
+				auto playsets = getModConfig().playsets.GetValue();
+				playsets.erase(playsets.begin() + selected_playset); // nope, can't just have a remove_at() function, need to do this bullshit. istg C++ is like if they _tried_ to make the stupidest fucking language ever.
+				getModConfig().playsets.SetValue(playsets);
+				UPDATE_PLAYSET_DROPDOWN();
+				playset_dropdown->dropdown->SelectCellWithIdx(0);
+			}));
+			#undef UPDATE_PLAYSET_DROPDOWN
 			// start button
 			tab_add(playset_tab, BSML::Lite::CreateUIButton(container->transform, "Start!", []() {
 				calculate_levels(false);

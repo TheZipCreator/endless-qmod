@@ -5,7 +5,7 @@
 
 namespace endless {
 	DECLARE_JSON_CLASS(PlaysetBeatmap,
-		VALUE(std::string, hash);
+		VALUE(std::string, id);
 		VALUE(std::string, difficulty);
 		VALUE(std::string, characteristic);
 	);
