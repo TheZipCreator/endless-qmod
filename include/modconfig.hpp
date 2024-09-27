@@ -24,5 +24,6 @@ DECLARE_CONFIG(ModConfig,
 	CONFIG_VALUE(chroma, std::string, "chroma", "Allowed");
 	CONFIG_VALUE(continue_on_fail, bool, "continue_on_fail", false);
 	CONFIG_VALUE(hud_enabled, bool, "hud_enabled", true);
+	CONFIG_VALUE(sequential, bool, "sequential", false);
 	CONFIG_VALUE(playsets, std::vector<endless::Playset>, "playsets", {});
 );

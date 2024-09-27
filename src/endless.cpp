@@ -317,6 +317,8 @@ namespace endless {
 			PaperLogger.info("Player is in multiplayer, probably shouldn't start Endless.");
 			return;
 		}
+		if(getModConfig().sequential.GetValue())
+			state.level_index = 0;
 		if(!next_level())
 			return;
 		state.activated = true;
@@ -345,6 +347,9 @@ namespace endless {
 	std::optional<LevelParams> get_next_level() {
 		if(state.levels.size() == 0)
 			return std::nullopt;
+		if(getModConfig().sequential.GetValue()) {
+			return state.level_index >= state.levels.size() ? std::nullopt : std::optional(state.levels[state.level_index++]);
+		}
 		// pick random level
 		return state.levels[std::rand()%state.levels.size()];
 	}

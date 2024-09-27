@@ -120,6 +120,9 @@ namespace endless {
 		BSML::Lite::CreateToggle(container->transform, "Endless HUD Enabled", getModConfig().hud_enabled.GetValue(), [](bool value) {
 			getModConfig().hud_enabled.SetValue(value);
 		});	
+		BSML::Lite::CreateToggle(container->transform, "Sequential", getModConfig().sequential.GetValue(), [](bool value) {
+			getModConfig().sequential.SetValue(value);
+		});	
 		
 		auto automatic_tab = std::make_shared<std::vector<UnityW<UnityEngine::GameObject>>>();
 		auto playset_tab = std::make_shared<std::vector<UnityW<UnityEngine::GameObject>>>();

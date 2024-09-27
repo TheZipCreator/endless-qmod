@@ -23,6 +23,8 @@ namespace endless {
 		// HUD text
 		SafePtrUnity<HMUI::CurvedTextMeshPro> time_text;
 		SafePtrUnity<HMUI::CurvedTextMeshPro> score_text;
+		// current level index (used in sequential mode)
+		size_t level_index;
 		// pre-calculated level params (calculated in `calculate_levels()`)
 		std::vector<LevelParams> levels;
 	};
