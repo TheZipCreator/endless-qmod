@@ -15,6 +15,7 @@
 #include "GlobalNamespace/CoreGameHUDController.hpp"
 #include "GlobalNamespace/ResultsViewController.hpp"
 #include "GlobalNamespace/ScoreFormatter.hpp"
+#include "GlobalNamespace/MultiplayerLobbyController.hpp"
 
 #include "Zenject/DiContainer.hpp"
 
@@ -311,6 +312,11 @@ namespace endless {
 	void start_endless(void) {
 		// start endless
 		PaperLogger.info("Starting endless mode...");
+		if(UnityEngine::Object::FindObjectOfType<GlobalNamespace::MultiplayerLobbyController *>() != nullptr) {
+			// player is in multiplayer
+			PaperLogger.info("Player is in multiplayer, probably shouldn't start Endless.");
+			return;
+		}
 		if(!next_level())
 			return;
 		state.activated = true;
