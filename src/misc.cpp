@@ -23,6 +23,8 @@
 
 #include "System/Action_2.hpp"
 #include "System/Nullable_1.hpp"
+#include "System/Collections/Generic/IReadOnlyList_1.hpp"
+#include "System/Collections/Generic/IReadOnlyCollection_1.hpp"
 
 #include "custom-types/shared/delegate.hpp"
 
@@ -88,6 +90,16 @@ namespace endless {
 		RETURN_IF_NULL(obj, nullptr);
 		return obj->_playerDataFileModel->_beatmapCharacteristicCollection->GetBeatmapCharacteristicBySerializedName(name);
 	}	
+	std::vector<GlobalNamespace::BeatmapCharacteristicSO *>get_characteristics(void) {
+		auto obj = UnityEngine::Object::FindObjectOfType<GlobalNamespace::PlayerDataModel *>();
+		RETURN_IF_NULL(obj, {});
+		auto list = obj->_playerDataFileModel->_beatmapCharacteristicCollection->beatmapCharacteristics;
+		int size = reinterpret_cast<System::Collections::Generic::IReadOnlyCollection_1<UnityW<GlobalNamespace::BeatmapCharacteristicSO>> *>(list)->Count;
+		std::vector<GlobalNamespace::BeatmapCharacteristicSO *> ret;
+		for(int i = 0; i < size; i++)
+			ret.push_back(list->get_Item(i));
+		return ret;
+	}
 	bool start_level(LevelParams params) {
 		PaperLogger.info("Starting level '{}'...", params.level->songName);
 		auto mth = UnityEngine::Object::FindObjectOfType<GlobalNamespace::MenuTransitionsHelper *>();

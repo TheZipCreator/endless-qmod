@@ -159,6 +159,18 @@ namespace endless {
 			tab_add_parent(automatic_tab, BSML::Lite::CreateDropdown(container->transform, "Difficulty", getModConfig().difficulty.GetValue(), difficulties, [](StringW string) {
 				getModConfig().difficulty.SetValue(string);
 			}));
+			// characteristic
+			// two vectors are necessary so that we can have a vector of string_views and not have them get clobbered over in memory.
+			std::vector<std::string> characteristics;
+			for(auto characteristic : get_characteristics()) {
+				if(characteristic->_serializedName == "MissingCharacteristic")
+					continue; // don't want that one
+				characteristics.push_back(characteristic->_serializedName);
+			}
+			std::vector<std::string_view> characteristics_views{characteristics.begin(), characteristics.end()};
+			tab_add_parent(automatic_tab, BSML::Lite::CreateDropdown(container->transform, "Characteristic", getModConfig().characteristic.GetValue(), characteristics_views, [](StringW string) {
+				getModConfig().characteristic.SetValue(string);
+			}));
 
 			// mods
 			std::vector<std::string_view> allow_state{"Allowed", "Required", "Forbidden"};
@@ -271,10 +283,12 @@ namespace endless {
 				playsets.push_back(playset);
 				getModConfig().playsets.SetValue(playsets);
 				UPDATE_PLAYSET_DROPDOWN();
+				selected_playset = playsets.size()-1;
 				playset_dropdown->dropdown->SelectCellWithIdx(playsets.size());
 				tab_set_visible(playset_tab_extra, true);
 				for(auto go : *level_bars)
 					UnityEngine::Object::Destroy(go);
+				level_bars->clear();
 			});
 			tab_add(playset_tab_extra, BSML::Lite::CreateUIButton(hgroup->transform, "Delete Playset", [=]() {
 				if(selected_playset == -1)
@@ -287,6 +301,7 @@ namespace endless {
 				tab_set_visible(playset_tab_extra, false);
 				for(auto go : *level_bars)
 					UnityEngine::Object::Destroy(go);
+				level_bars->clear();
 			}));
 			// start button
 			tab_add(playset_tab_extra, BSML::Lite::CreateUIButton(hgroup->transform, "Start!", []() {

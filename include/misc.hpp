@@ -37,6 +37,8 @@ namespace endless {
 	};
 	// gets a characteristic by name. returns `null` if it can't be found.
 	GlobalNamespace::BeatmapCharacteristicSO *get_characteristic(std::string name);
+	// returns a list of all characteristics
+	std::vector<GlobalNamespace::BeatmapCharacteristicSO *> get_characteristics(void);
 	// starts playing a level. Returns `true` if the level was successfully started, `false` otherwise.
 	bool start_level(LevelParams params);
 	// Mods that are known to cause issues
