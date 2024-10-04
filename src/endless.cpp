@@ -114,7 +114,8 @@ MAKE_HOOK_MATCH(MenuTransitionsHelper_HandleMainGameSceneDidFinish, &GlobalNames
 		if(lcr->levelEndStateType == GlobalNamespace::LevelCompletionResults::LevelEndStateType::Cleared)
 			endless::state.score += lcr->modifiedScore;
 		self->_gameScenesManager->PopScenes(0.f, nullptr, custom_types::MakeDelegate<System::Action_1<Zenject::DiContainer*>*>(std::function([self](Zenject::DiContainer *unused) {
-			endless::next_level();
+			if(!endless::next_level())
+				endless::state.activated = false;
 		})));
 		return;
 	}
