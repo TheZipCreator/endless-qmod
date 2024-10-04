@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <vector>
+#include <random>
 
 #include "UnityEngine/Object.hpp"
 
@@ -307,6 +308,9 @@ namespace endless {
 					PaperLogger.warn("Found invalid level in playset.");
 			}
 		}
+		// shuffle
+		if(!getModConfig().sequential.GetValue())
+			std::shuffle(state.levels.begin(), state.levels.end(), std::default_random_engine { std::random_device {}() });
 	}
 
 	void start_endless(void) {
@@ -317,8 +321,7 @@ namespace endless {
 			PaperLogger.info("Player is in multiplayer, probably shouldn't start Endless.");
 			return;
 		}
-		if(getModConfig().sequential.GetValue())
-			state.level_index = 0;
+		state.level_index = 0;
 		if(!next_level())
 			return;
 		state.activated = true;
@@ -347,11 +350,14 @@ namespace endless {
 	std::optional<LevelParams> get_next_level() {
 		if(state.levels.size() == 0)
 			return std::nullopt;
-		if(getModConfig().sequential.GetValue()) {
-			return state.level_index >= state.levels.size() ? std::nullopt : std::optional(state.levels[state.level_index++]);
+		if(state.level_index >= state.levels.size()) {
+			if(getModConfig().end_after_all.GetValue())
+				return std::nullopt;
+			if(!getModConfig().sequential.GetValue())
+				std::shuffle(state.levels.begin(), state.levels.end(), std::default_random_engine { std::random_device {}() });
+			state.level_index = 0;
 		}
-		// pick random level
-		return state.levels[std::rand()%state.levels.size()];
+		return state.levels[state.level_index++];
 	}
 	void register_endless_hooks() {
 		INSTALL_HOOK(PaperLogger, PauseMenuManager_Start);

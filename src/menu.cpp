@@ -120,8 +120,12 @@ namespace endless {
 		BSML::Lite::CreateToggle(container->transform, "Endless HUD Enabled", getModConfig().hud_enabled.GetValue(), [](bool value) {
 			getModConfig().hud_enabled.SetValue(value);
 		});	
-		BSML::Lite::CreateToggle(container->transform, "Sequential", getModConfig().sequential.GetValue(), [](bool value) {
+		auto sequential_toggle = BSML::Lite::CreateToggle(container->transform, "Sequential", getModConfig().sequential.GetValue(), [](bool value) {
 			getModConfig().sequential.SetValue(value);
+		});	
+		BSML::Lite::AddHoverHint(sequential_toggle, "Play maps one after another. Most useful in playset mode.");
+		BSML::Lite::CreateToggle(container->transform, "End After All Songs Finish", getModConfig().end_after_all.GetValue(), [](bool value) {
+			getModConfig().end_after_all.SetValue(value);
 		});	
 		
 		auto automatic_tab = std::make_shared<std::vector<UnityW<UnityEngine::GameObject>>>();

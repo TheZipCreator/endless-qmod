@@ -25,5 +25,6 @@ DECLARE_CONFIG(ModConfig,
 	CONFIG_VALUE(continue_on_fail, bool, "continue_on_fail", false);
 	CONFIG_VALUE(hud_enabled, bool, "hud_enabled", true);
 	CONFIG_VALUE(sequential, bool, "sequential", false);
+	CONFIG_VALUE(end_after_all, bool, "end_after_all", false);
 	CONFIG_VALUE(playsets, std::vector<endless::Playset>, "playsets", {});
 );
