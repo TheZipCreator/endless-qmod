@@ -1,6 +1,8 @@
 # Endless
 *Play endlessly, or at least until you fail.*
 
+**NOTICE: This mod has been moved to [sourcehut](https://sr.ht/~thezipcreator/endless-qmod/)**
+
 Adds an Endless mode to Beat Saber, accessible via a gameplay setup tab. You can configure what features the maps being played should have, such as:
 * Difficulty
 * Requirements (Noodle Extensions, Chroma)
